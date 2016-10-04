@@ -75,6 +75,9 @@ class TestAccountTaxBalance(TransactionCase):
             ('date_start', '=', '%s-%s-01' % (
                 self.current_year, self.current_month))
         ])
+        wizard = self.env['wizard.open.tax.balances'].new({})
+        self.assertFalse(wizard.from_date)
+        self.assertFalse(wizard.to_date)
         wizard = self.env['wizard.open.tax.balances'].new({
             'date_range_id': current_range[0].id,
         })
@@ -101,3 +104,9 @@ class TestAccountTaxBalance(TransactionCase):
             [l.id for l in invoice.move_id.line_ids])
         self.assertEqual(
             base_action['xml_id'], 'account.action_account_moves_all_tree')
+
+        # test specific method
+        state_list = tax.get_target_state_list(target_move='all')
+        self.assertEqual(state_list, ['posted', 'draft'])
+        state_list = tax.get_target_state_list(target_move='whatever')
+        self.assertEqual(state_list, [])
