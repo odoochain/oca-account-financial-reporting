@@ -81,5 +81,23 @@ class TestAccountTaxBalance(TransactionCase):
         wizard.onchange_date_range_id()
         wizard._convert_to_write(wizard._cache)
         action = wizard.open_taxes()
-        self.assertEqual(action['context']['from_date'], current_range[0].date_start)
-        self.assertEqual(action['context']['to_date'], current_range[0].date_end)
+        self.assertEqual(
+            action['context']['from_date'], current_range[0].date_start)
+        self.assertEqual(
+            action['context']['to_date'], current_range[0].date_end)
+        self.assertEqual(
+            action['xml_id'], 'account_tax_balance.action_tax_balances_tree')
+
+        # testing buttons
+        tax_action = tax.view_tax_lines()
+        base_action = tax.view_base_lines()
+        self.assertTrue(
+            tax_action['domain'][0][2][0] in
+            [l.id for l in invoice.move_id.line_ids])
+        self.assertEqual(
+            tax_action['xml_id'], 'account.action_account_moves_all_tree')
+        self.assertTrue(
+            base_action['domain'][0][2][0] in
+            [l.id for l in invoice.move_id.line_ids])
+        self.assertEqual(
+            base_action['xml_id'], 'account.action_account_moves_all_tree')
