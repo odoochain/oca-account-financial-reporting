@@ -4,9 +4,30 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from openerp.tests.common import TransactionCase
+from datetime import datetime
+from dateutil.rrule import MONTHLY
 
 
 class TestAccountTaxBalance(TransactionCase):
+
+    def setUp(self):
+        super(TestAccountTaxBalance, self).setUp()
+        self.range_type = self.env['date.range.type'].create(
+            {'name': 'Fiscal year',
+             'company_id': False,
+             'allow_overlap': False})
+        self.range_generator = self.env['date.range.generator']
+        self.current_year = datetime.now().year
+        self.current_month = datetime.now().month
+        range_generator = self.range_generator.create({
+            'date_start': '%s-01-01' % self.current_year,
+            'name_prefix': '%s-' % self.current_year,
+            'type_id': self.range_type.id,
+            'duration_count': 1,
+            'unit_of_time': MONTHLY,
+            'count': 12})
+        range_generator.action_apply()
+        self.range = self.env['date.range']
 
     def test_tax_balance(self):
         tax_account_id = self.env['account.account'].search(
@@ -48,3 +69,17 @@ class TestAccountTaxBalance(TransactionCase):
 
         self.assertEquals(tax.base_balance, 100)
         self.assertEquals(tax.balance, 10)
+
+        # testing wizard
+        current_range = self.range.search([
+            ('date_start', '=', '%s-%s-01' % (
+                self.current_year, self.current_month))
+        ])
+        wizard = self.env['wizard.open.tax.balances'].new({
+            'date_range_id': current_range[0].id,
+        })
+        wizard.onchange_date_range_id()
+        wizard._convert_to_write(wizard._cache)
+        action = wizard.open_taxes()
+        self.assertEqual(action['context']['from_date'], current_range[0].date_start)
+        self.assertEqual(action['context']['to_date'], current_range[0].date_end)
