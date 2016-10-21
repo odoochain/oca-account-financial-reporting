@@ -14,11 +14,11 @@
             <field name="description" string="Short Name"/>
             <field name="account_id"/>
             <field name="balance_regular" sum="Total"/>
-            <button type="object" name="view_tax_lines"
-                    string="View tax lines" icon="fa-search-plus"/>
+            <button type="object" name="view_tax_regular_lines"
+                    string="View tax regular lines" icon="fa-search-plus"/>
             <field name="base_balance_regular" sum="Base Total"/>
-            <button type="object" name="view_base_lines"
-                    string="View base lines" icon="fa-search-plus"/>
+            <button type="object" name="view_base_regular_lines"
+                    string="View base regular lines" icon="fa-search-plus"/>
             <field name="balance_refund" sum="Total"/>
             <button type="object" name="view_tax_refund_lines"
                     string="View tax refund lines" icon="fa-search-plus"/>
@@ -26,7 +26,11 @@
             <button type="object" name="view_base_refund_lines"
                     string="View base refund lines" icon="fa-search-plus"/>
             <field name="balance" sum="Total"/>
+            <button type="object" name="view_tax_lines"
+                    string="View tax lines" icon="fa-search-plus"/>
             <field name="base_balance" sum="Base Total"/>
+            <button type="object" name="view_base_lines"
+                    string="View base lines" icon="fa-search-plus"/>
         </tree>
     </field>
 </record>

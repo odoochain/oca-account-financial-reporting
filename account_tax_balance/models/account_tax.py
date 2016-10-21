@@ -75,19 +75,24 @@ class AccountTax(models.Model):
 
     def _compute_balance(self):
         for tax in self:
-            tax.balance_regular = tax.compute_balance(tax_or_base='tax')
-            tax.base_balance_regular = tax.compute_balance(tax_or_base='base')
+            tax.balance_regular = tax.compute_balance(
+                tax_or_base='tax', move_type='regular')
+            tax.base_balance_regular = tax.compute_balance(
+                tax_or_base='base', move_type='regular')
             tax.balance_refund = tax.compute_balance(
-                tax_or_base='tax', refund=True)
+                tax_or_base='tax', move_type='refund')
             tax.base_balance_refund = tax.compute_balance(
-                tax_or_base='base', refund=True)
+                tax_or_base='base', move_type='refund')
             tax.balance = tax.balance_regular + tax.balance_refund
             tax.base_balance = (
                 tax.base_balance_regular + tax.base_balance_refund)
 
-    def get_target_type_list(self, refund=False):
-        return ['receivable_refund', 'payable_refund'] if refund else \
-               ['receivable', 'payable']
+    def get_target_type_list(self, move_type=None):
+        if move_type == 'refund':
+            return ['receivable_refund', 'payable_refund']
+        elif move_type == 'regular':
+            return ['receivable', 'payable']
+        return []
 
     def get_target_state_list(self, target_move="posted"):
         if target_move == 'posted':
@@ -105,10 +110,10 @@ class AccountTax(models.Model):
             ('company_id', '=', company_id),
         ]
 
-    def compute_balance(self, tax_or_base='tax', refund=False):
+    def compute_balance(self, tax_or_base='tax', move_type=None):
         self.ensure_one()
         move_lines = self.get_move_lines_domain(
-            tax_or_base=tax_or_base, refund=refund)
+            tax_or_base=tax_or_base, move_type=move_type)
         # balance is debit - credit whereas on tax return you want to see what
         # vat has to be paid so:
         # VAT on sales (credit) - VAT on purchases (debit).
@@ -116,24 +121,28 @@ class AccountTax(models.Model):
         return total
 
     def get_balance_domain(self, state_list, type_list):
-        return [
-            ('move_id.move_type', 'in', type_list),
+        domain = [
             ('move_id.state', 'in', state_list),
             ('tax_line_id', '=', self.id),
         ]
+        if type_list:
+            domain.append(('move_id.move_type', 'in', type_list))
+        return domain
 
     def get_base_balance_domain(self, state_list, type_list):
-        return [
-            ('move_id.move_type', 'in', type_list),
+        domain = [
             ('move_id.state', 'in', state_list),
             ('tax_ids', 'in', self.id),
         ]
+        if type_list:
+            domain.append(('move_id.move_type', 'in', type_list))
+        return domain
 
-    def get_move_lines_domain(self, tax_or_base='tax', refund=False):
+    def get_move_lines_domain(self, tax_or_base='tax', move_type=None):
         move_line_model = self.env['account.move.line']
         from_date, to_date, company_id, target_move = self.get_context_values()
         state_list = self.get_target_state_list(target_move)
-        type_list = self.get_target_type_list(refund)
+        type_list = self.get_target_type_list(move_type)
         domain = self.get_move_line_partial_domain(
             from_date, to_date, company_id)
         balance_domain = []
@@ -145,9 +154,9 @@ class AccountTax(models.Model):
         domain.extend(balance_domain)
         return move_line_model.search(domain)
 
-    def get_lines_action(self, tax_or_base='tax', refund=False):
+    def get_lines_action(self, tax_or_base='tax', move_type=None):
         move_lines = self.get_move_lines_domain(
-            tax_or_base=tax_or_base, refund=refund)
+            tax_or_base=tax_or_base, move_type=move_type)
         move_line_ids = [l.id for l in move_lines]
         action = self.env.ref('account.action_account_moves_all_tree')
         vals = action.read()[0]
@@ -166,11 +175,21 @@ class AccountTax(models.Model):
         return self.get_lines_action(tax_or_base='base')
 
     @api.multi
+    def view_tax_regular_lines(self):
+        self.ensure_one()
+        return self.get_lines_action(tax_or_base='tax', move_type='regular')
+
+    @api.multi
+    def view_base_regular_lines(self):
+        self.ensure_one()
+        return self.get_lines_action(tax_or_base='base', move_type='regular')
+
+    @api.multi
     def view_tax_refund_lines(self):
         self.ensure_one()
-        return self.get_lines_action(tax_or_base='tax', refund=True)
+        return self.get_lines_action(tax_or_base='tax', move_type='refund')
 
     @api.multi
     def view_base_refund_lines(self):
         self.ensure_one()
-        return self.get_lines_action(tax_or_base='base', refund=True)
+        return self.get_lines_action(tax_or_base='base', move_type='refund')
