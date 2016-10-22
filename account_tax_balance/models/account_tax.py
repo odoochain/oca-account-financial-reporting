@@ -24,7 +24,7 @@ class AccountTax(models.Model):
         search='_search_base_balance_regular')
     balance_refund = fields.Float(
         string="Balance Refund", compute="_compute_balance",
-        search='_search_base_refund')
+        search='_search_balance_refund')
     base_balance_refund = fields.Float(
         string="Base Balance Refund", compute="_compute_balance",
         search='_search_base_balance_refund')
