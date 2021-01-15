@@ -10,26 +10,30 @@ class AbstractReportXslx(models.AbstractModel):
     _inherit = "report.report_xlsx.abstract"
 
     def __init__(self, pool, cr):
+        self._set_default_attributes()
+
+    @classmethod
+    def _set_default_attributes(cls):
         # main sheet which will contains report
-        self.sheet = None
+        cls.sheet = None
 
         # columns of the report
-        self.columns = None
+        cls.columns = None
 
         # row_pos must be incremented at each writing lines
-        self.row_pos = None
+        cls.row_pos = None
 
         # Formats
-        self.format_right = None
-        self.format_left = None
-        self.format_right_bold_italic = None
-        self.format_bold = None
-        self.format_header_left = None
-        self.format_header_center = None
-        self.format_header_right = None
-        self.format_header_amount = None
-        self.format_amount = None
-        self.format_percent_bold_italic = None
+        cls.format_right = None
+        cls.format_left = None
+        cls.format_right_bold_italic = None
+        cls.format_bold = None
+        cls.format_header_left = None
+        cls.format_header_center = None
+        cls.format_header_right = None
+        cls.format_header_amount = None
+        cls.format_amount = None
+        cls.format_percent_bold_italic = None
 
     def get_workbook_options(self):
         return {"constant_memory": True}
