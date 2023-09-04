@@ -311,7 +311,7 @@ class GeneralLedgerReport(models.AbstractModel):
         move_line_data = {
             "id": move_line["id"],
             "date": move_line["date"],
-            "entry": move_line["move_id"][1],
+            "entry": move_line["move_name"],
             "entry_id": move_line["move_id"][0],
             "journal_id": move_line["journal_id"][0],
             "account_id": move_line["account_id"][0],
@@ -436,6 +436,8 @@ class GeneralLedgerReport(models.AbstractModel):
                     res.append({"id": tax_item.id, "name": tax_item.name})
             else:
                 res.append({"id": 0, "name": "Missing Tax"})
+        else:
+            res.append({"id": 0, "name": ""})
         return res
 
     def _get_period_ml_data(
@@ -465,29 +467,9 @@ class GeneralLedgerReport(models.AbstractModel):
         )
         if extra_domain:
             domain += extra_domain
-        ml_fields = [
-            "id",
-            "name",
-            "date",
-            "move_id",
-            "journal_id",
-            "account_id",
-            "partner_id",
-            "debit",
-            "credit",
-            "balance",
-            "currency_id",
-            "full_reconcile_id",
-            "tax_ids",
-            "tax_line_id",
-            "analytic_tag_ids",
-            "amount_currency",
-            "ref",
-            "name",
-            "analytic_account_id",
-        ]
+        ml_fields = self._get_ml_fields()
         move_lines = self.env["account.move.line"].search_read(
-            domain=domain, fields=ml_fields
+            domain=domain, fields=ml_fields, order="date,move_name"
         )
         journal_ids = set()
         full_reconcile_ids = set()
@@ -519,13 +501,15 @@ class GeneralLedgerReport(models.AbstractModel):
                 gen_ld_data[acc_id] = self._initialize_data(foreign_currency)
                 gen_ld_data[acc_id]["id"] = acc_id
                 gen_ld_data[acc_id]["mame"] = move_line["account_id"][1]
-                gen_ld_data[acc_id][grouped_by] = False
+                if grouped_by:
+                    gen_ld_data[acc_id][grouped_by] = False
             if acc_id in acc_prt_account_ids:
                 item_ids = self._prepare_ml_items(move_line, grouped_by)
                 for item in item_ids:
                     item_id = item["id"]
                     if item_id not in gen_ld_data[acc_id]:
-                        gen_ld_data[acc_id][grouped_by] = True
+                        if grouped_by:
+                            gen_ld_data[acc_id][grouped_by] = True
                         gen_ld_data[acc_id][item_id] = self._initialize_data(
                             foreign_currency
                         )
@@ -891,3 +875,18 @@ class GeneralLedgerReport(models.AbstractModel):
             "filter_partner_ids": True if partner_ids else False,
             "currency_model": self.env["res.currency"],
         }
+
+    def _get_ml_fields(self):
+        return self.COMMON_ML_FIELDS + [
+            "analytic_account_id",
+            "full_reconcile_id",
+            "analytic_tag_ids",
+            "tax_line_id",
+            "currency_id",
+            "credit",
+            "debit",
+            "amount_currency",
+            "balance",
+            "tax_ids",
+            "move_name",
+        ]
