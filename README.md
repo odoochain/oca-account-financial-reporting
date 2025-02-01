@@ -21,10 +21,15 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[account_financial_report](account_financial_report/) | 15.0.1.2.0 |  | OCA Financial Reports
-[account_tax_balance](account_tax_balance/) | 15.0.1.1.0 |  | Compute tax balances based on date range
+[account_financial_report](account_financial_report/) | 15.0.3.2.2 |  | OCA Financial Reports
+[account_financial_report_sale](account_financial_report_sale/) | 15.0.1.0.0 |  | OCA Financial Reports Sale
+[account_move_line_report_xls](account_move_line_report_xls/) | 15.0.1.0.0 |  | Journal Items Excel export
+[account_purchase_stock_report_non_billed](account_purchase_stock_report_non_billed/) | 15.0.1.1.1 | [![CarlosRoca13](https://github.com/CarlosRoca13.png?size=30px)](https://github.com/CarlosRoca13) | Account Purchase Stock Report Non Billed
+[account_sale_stock_report_non_billed](account_sale_stock_report_non_billed/) | 15.0.1.0.4 | [![CarlosRoca13](https://github.com/CarlosRoca13.png?size=30px)](https://github.com/CarlosRoca13) | Account Sale Stock Report Non Billed
+[account_tax_balance](account_tax_balance/) | 15.0.1.1.1 |  | Compute tax balances based on date range
 [mis_builder_cash_flow](mis_builder_cash_flow/) | 15.0.1.0.0 | [![jjscarafia](https://github.com/jjscarafia.png?size=30px)](https://github.com/jjscarafia) | MIS Builder Cash Flow
-[partner_statement](partner_statement/) | 15.0.1.0.0 |  | OCA Financial Reports
+[mis_template_financial_report](mis_template_financial_report/) | 15.0.1.0.1 | [![hbrunn](https://github.com/hbrunn.png?size=30px)](https://github.com/hbrunn) | Profit & Loss / Balance sheet MIS templates
+[partner_statement](partner_statement/) | 15.0.1.1.4 | [![MiquelRForgeFlow](https://github.com/MiquelRForgeFlow.png?size=30px)](https://github.com/MiquelRForgeFlow) | OCA Financial Reports
 
 [//]: # (end addons)
 
