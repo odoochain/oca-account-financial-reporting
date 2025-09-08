@@ -27,7 +27,6 @@ msgstr ""
 
 #. module: account_tax_balance
 #: model_terms:ir.ui.view,arch_db:account_tax_balance.view_tax_search_balance
-#: model_terms:ir.ui.view,arch_db:account_tax_balance.view_tax_tree_balance
 msgid "Account Tax"
 msgstr ""
 
@@ -94,9 +93,6 @@ msgid "Date Range"
 msgstr "Interval de dates"
 
 #. module: account_tax_balance
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_move__display_name
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_move_line__display_name
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_tax__display_name
 #: model:ir.model.fields,field_description:account_tax_balance.field_wizard_open_tax_balances__display_name
 msgid "Display Name"
 msgstr "Nom a mostrar "
@@ -106,6 +102,11 @@ msgstr "Nom a mostrar "
 #: model:ir.model.fields,field_description:account_tax_balance.field_account_move__financial_type
 #: model:ir.model.fields,field_description:account_tax_balance.field_account_payment__financial_type
 msgid "Financial Type"
+msgstr ""
+
+#. module: account_tax_balance
+#: model_terms:ir.ui.view,arch_db:account_tax_balance.view_account_move_filter
+msgid "Financial type"
 msgstr ""
 
 #. module: account_tax_balance
@@ -125,9 +126,6 @@ msgid "Has balance in period"
 msgstr ""
 
 #. module: account_tax_balance
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_move__id
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_move_line__id
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_tax__id
 #: model:ir.model.fields,field_description:account_tax_balance.field_wizard_open_tax_balances__id
 msgid "ID"
 msgstr "ID"
@@ -143,9 +141,6 @@ msgid "Journal Item"
 msgstr "Apunt comptable"
 
 #. module: account_tax_balance
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_move____last_update
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_move_line____last_update
-#: model:ir.model.fields,field_description:account_tax_balance.field_account_tax____last_update
 #: model:ir.model.fields,field_description:account_tax_balance.field_wizard_open_tax_balances____last_update
 msgid "Last Modified on"
 msgstr "Última modificació a "
@@ -165,11 +160,6 @@ msgstr "Última actualització a "
 #, python-format
 msgid "Liquidity"
 msgstr ""
-
-#. module: account_tax_balance
-#: model_terms:ir.ui.view,arch_db:account_tax_balance.view_account_move_filter
-msgid "Move type"
-msgstr "Tipus de moviment"
 
 #. module: account_tax_balance
 #: model_terms:ir.ui.view,arch_db:account_tax_balance.wizard_open_tax_balances
@@ -306,6 +296,9 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_tax_balance.wizard_open_tax_balances
 msgid "or"
 msgstr "o"
+
+#~ msgid "Move type"
+#~ msgstr "Tipus de moviment"
 
 #~ msgid "Journal Entries"
 #~ msgstr "Apunts comptables"

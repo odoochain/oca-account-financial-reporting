@@ -22,11 +22,11 @@
                             <field name="date_from" />
                             <field name="date_to" />
                             <field name="fy_start_date" invisible="1" />
+                            <field name="target_move" widget="radio" />
                         </group>
                         <group name="other_filters">
-                            <field name="target_move" widget="radio" />
+                            <field name="grouped_by" />
                             <field name="centralize" />
-                            <field name="show_partner_details" />
                             <field name="hide_account_at_0" />
                             <field name="foreign_currency" />
                             <field name="show_analytic_tags" />
@@ -100,6 +100,13 @@
                                 widget="domain"
                                 options="{'model': 'account.move.line', 'in_dialog': True}"
                                 context="{'skip_search_count': 1}"
+                            />
+                        </page>
+                        <page name="columns" string="Columns">
+                            <field
+                                name="column_ids"
+                                context="{'default_res_name': 'general.ledger.report.wizard'}"
+                                widget="one2many"
                             />
                         </page>
                     </notebook>

@@ -78,13 +78,15 @@ class GeneralLedgerXslx(models.AbstractModel):
                     "field": "bal_curr",
                     "field_initial_balance": "initial_bal_curr",
                     "field_final_balance": "final_bal_curr",
-                    "type": "amount_different_company_currency",
+                    "type": "amount_currency",
                     "width": 10,
                 },
                 {
                     "header": _("Cumul cur."),
                     "field": "total_bal_curr",
-                    "type": "amount_different_company_currency",
+                    "field_initial_balance": "initial_bal_curr",
+                    "field_final_balance": "final_bal_curr",
+                    "type": "amount_currency",
                     "width": 10,
                 },
             ]
@@ -143,22 +145,22 @@ class GeneralLedgerXslx(models.AbstractModel):
         ]._get_report_values(report, data)
         general_ledger = res_data["general_ledger"]
         accounts_data = res_data["accounts_data"]
-        partners_data = res_data["partners_data"]
         journals_data = res_data["journals_data"]
         taxes_data = res_data["taxes_data"]
         tags_data = res_data["tags_data"]
         filter_partner_ids = res_data["filter_partner_ids"]
         foreign_currency = res_data["foreign_currency"]
-        company_currency = report.company_id.currency_id
+        company_currency = res_data["company_currency"]
         # For each account
         for account in general_ledger:
             # Write account title
+            total_bal_curr = 0
             self.write_array_title(
                 account["code"] + " - " + accounts_data[account["id"]]["name"],
                 report_data,
             )
 
-            if not account["partners"]:
+            if "list_grouped" not in account:
                 # Display array header for move lines
                 self.write_array_header(report_data)
 
@@ -170,23 +172,24 @@ class GeneralLedgerXslx(models.AbstractModel):
                         "initial_balance": account["init_bal"]["balance"],
                     }
                 )
-                if foreign_currency:
+                if foreign_currency and account["currency_id"]:
                     account.update(
                         {"initial_bal_curr": account["init_bal"]["bal_curr"]}
                     )
                 self.write_initial_balance_from_dict(account, report_data)
 
                 # Display account move lines
-                total_bal_curr = 0
                 for line in account["move_lines"]:
                     line.update(
                         {
                             "account": account["code"],
                             "journal": journals_data[line["journal_id"]]["code"],
-                            "company_currency_id": company_currency.id,
                         }
                     )
-                    if line["currency_id"]:
+                    line_currency_id = (
+                        line["currency_id"][0] if line["currency_id"] else False
+                    )
+                    if line_currency_id and line_currency_id != company_currency.id:
                         line.update(
                             {
                                 "currency_name": line["currency_id"][1],
@@ -198,6 +201,8 @@ class GeneralLedgerXslx(models.AbstractModel):
                         tags = ""
                         for tax_id in line["tax_ids"]:
                             taxes_description += taxes_data[tax_id]["tax_name"] + " "
+                        if line["tax_line_id"]:
+                            taxes_description += line["tax_line_id"][1]
                         for tag_id in line["tag_ids"]:
                             tags += tags_data[tag_id]["name"] + " "
                         line.update(
@@ -208,8 +213,8 @@ class GeneralLedgerXslx(models.AbstractModel):
                         )
                     if (
                         foreign_currency
-                        and line["currency_id"]
-                        and line["currency_id"] != company_currency.id
+                        and line_currency_id
+                        and line_currency_id != company_currency.id
                     ):
                         total_bal_curr += line["bal_curr"]
                         line.update({"total_bal_curr": total_bal_curr})
@@ -222,7 +227,7 @@ class GeneralLedgerXslx(models.AbstractModel):
                         "final_balance": account["fin_bal"]["balance"],
                     }
                 )
-                if foreign_currency:
+                if foreign_currency and account["currency_id"]:
                     account.update(
                         {
                             "final_bal_curr": account["fin_bal"]["bal_curr"],
@@ -232,45 +237,59 @@ class GeneralLedgerXslx(models.AbstractModel):
 
             else:
                 # For each partner
-                for partner in account["list_partner"]:
+                total_bal_curr = 0
+                for group_item in account["list_grouped"]:
                     # Write partner title
-                    self.write_array_title(
-                        partners_data[partner["id"]]["name"], report_data
-                    )
+                    self.write_array_title(group_item["name"], report_data)
 
                     # Display array header for move lines
                     self.write_array_header(report_data)
 
-                    # Display initial balance line for partner
-                    partner.update(
+                    account.update(
                         {
-                            "initial_debit": partner["init_bal"]["debit"],
-                            "initial_credit": partner["init_bal"]["credit"],
-                            "initial_balance": partner["init_bal"]["balance"],
-                            "name": partners_data[partner["id"]]["name"],
-                            "type": "partner",
                             "currency_id": accounts_data[account["id"]]["currency_id"],
+                            "currency_name": accounts_data[account["id"]][
+                                "currency_name"
+                            ],
                         }
                     )
-                    if foreign_currency:
-                        partner.update(
+
+                    # Display initial balance line for partner
+                    group_item.update(
+                        {
+                            "initial_debit": group_item["init_bal"]["debit"],
+                            "initial_credit": group_item["init_bal"]["credit"],
+                            "initial_balance": group_item["init_bal"]["balance"],
+                            "type": "partner",
+                            "grouped_by": account["grouped_by"]
+                            if "grouped_by" in account
+                            else "",
+                            "currency_id": accounts_data[account["id"]]["currency_id"],
+                            "currency_name": accounts_data[account["id"]][
+                                "currency_name"
+                            ],
+                        }
+                    )
+                    if foreign_currency and account["currency_id"]:
+                        group_item.update(
                             {
-                                "initial_bal_curr": partner["init_bal"]["bal_curr"],
+                                "initial_bal_curr": group_item["init_bal"]["bal_curr"],
                             }
                         )
-                    self.write_initial_balance_from_dict(partner, report_data)
+                    self.write_initial_balance_from_dict(group_item, report_data)
 
                     # Display account move lines
-                    total_bal_curr = 0
-                    for line in partner["move_lines"]:
+                    for line in group_item["move_lines"]:
                         line.update(
                             {
                                 "account": account["code"],
                                 "journal": journals_data[line["journal_id"]]["code"],
-                                "company_currency_id": company_currency.id,
                             }
                         )
-                        if line["currency_id"]:
+                        line_currency_id = (
+                            line["currency_id"][0] if line["currency_id"] else False
+                        )
+                        if line_currency_id and line_currency_id != company_currency.id:
                             line.update(
                                 {
                                     "currency_name": line["currency_id"][1],
@@ -294,30 +313,28 @@ class GeneralLedgerXslx(models.AbstractModel):
                             )
                         if (
                             foreign_currency
-                            and line["currency_id"]
-                            and line["currency_id"] != company_currency.id
+                            and line_currency_id
+                            and line_currency_id != company_currency.id
                         ):
                             total_bal_curr += line["bal_curr"]
                             line.update({"total_bal_curr": total_bal_curr})
                         self.write_line_from_dict(line, report_data)
 
                     # Display ending balance line for partner
-                    partner.update(
+                    group_item.update(
                         {
-                            "final_debit": partner["fin_bal"]["debit"],
-                            "final_credit": partner["fin_bal"]["credit"],
-                            "final_balance": partner["fin_bal"]["balance"],
+                            "final_debit": group_item["fin_bal"]["debit"],
+                            "final_credit": group_item["fin_bal"]["credit"],
+                            "final_balance": group_item["fin_bal"]["balance"],
                         }
                     )
-                    if foreign_currency and partner["currency_id"]:
-                        partner.update(
+                    if foreign_currency and group_item["currency_id"]:
+                        group_item.update(
                             {
-                                "final_bal_curr": partner["fin_bal"]["bal_curr"],
-                                "currency_name": partner["currency_id"].name,
-                                "currency_id": partner["currency_id"].id,
+                                "final_bal_curr": group_item["fin_bal"]["bal_curr"],
                             }
                         )
-                    self.write_ending_balance_from_dict(partner, report_data)
+                    self.write_ending_balance_from_dict(group_item, report_data)
 
                     # Line break
                     report_data["row_pos"] += 1
@@ -330,12 +347,11 @@ class GeneralLedgerXslx(models.AbstractModel):
                             "final_balance": account["fin_bal"]["balance"],
                         }
                     )
-                    if foreign_currency and account["currency_id"]:
+                    if foreign_currency and account["fin_bal_currency_id"]:
                         account.update(
                             {
-                                "final_bal_curr": account["fin_bal"]["bal_curr"],
-                                "currency_name": account["currency_id"].name,
-                                "currency_id": account["currency_id"].id,
+                                "final_bal_curr": total_bal_curr,
+                                "currency_id": account["fin_bal_currency_id"],
                             }
                         )
                     self.write_ending_balance_from_dict(account, report_data)
@@ -345,22 +361,27 @@ class GeneralLedgerXslx(models.AbstractModel):
 
     def write_initial_balance_from_dict(self, my_object, report_data):
         """Specific function to write initial balance for General Ledger"""
-        if "partner" in my_object["type"]:
-            label = _("Partner Initial balance")
-        elif "account" in my_object["type"]:
-            label = _("Initial balance")
-        return super(GeneralLedgerXslx, self).write_initial_balance_from_dict(
-            my_object, label, report_data
-        )
+        label = False
+        if "account" not in my_object["type"] and "grouped_by" in my_object:
+            if my_object["grouped_by"] == "partners":
+                label = _("Partner Initial balance")
+            elif my_object["grouped_by"] == "taxes":
+                label = _("Tax Initial balance")
+        label = label if label else _("Initial balance")
+        return super().write_initial_balance_from_dict(my_object, label, report_data)
 
     def write_ending_balance_from_dict(self, my_object, report_data):
         """Specific function to write ending balance for General Ledger"""
-        if "partner" in my_object["type"]:
-            name = my_object["name"]
-            label = _("Partner ending balance")
-        elif "account" in my_object["type"]:
+        label = name = False
+        if "account" in my_object["type"]:
             name = my_object["code"] + " - " + my_object["name"]
-            label = _("Ending balance")
-        return super(GeneralLedgerXslx, self).write_ending_balance_from_dict(
+        elif "grouped_by" in my_object:
+            name = my_object["name"]
+            if my_object["grouped_by"] == "partners":
+                label = _("Partner ending balance")
+            elif my_object["grouped_by"] == "taxes":
+                label = _("Tax ending balance")
+        label = label if label else _("Ending balance")
+        return super().write_ending_balance_from_dict(
             my_object, name, label, report_data
         )
